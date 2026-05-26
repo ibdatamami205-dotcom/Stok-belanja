@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manajemen Produk</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-50: #EFF6FF;
+    --blue-100: #DBEAFE;
+    --blue-200: #BFDBFE;
+    --blue-400: #60A5FA;
+    --blue-500: #3B82F6;
+    --blue-600: #2563EB;
+    --blue-700: #1D4ED8;
+    --blue-800: #1E40AF;
+    --blue-900: #1E3A8A;
+    --blue-950: #172554;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1E293B;
+    --red-500: #EF4444;
+    --red-100: #FEE2E2;
+    --green-500: #22C55E;
+    --green-100: #DCFCE7;
+    --green-800: #166534;
+    --ff: 'Plus Jakarta Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--ff);
+    background: var(--blue-950);
+    min-height: 100vh;
+    color: var(--gray-800);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px; left: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .header {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .header-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--blue-500), var(--blue-700));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+  }
+  .header-icon svg { width: 26px; height: 26px; }
+  .header-text h1 {
+    font-size: 1.5rem; font-weight: 700; color: #fff; letter-spacing: -0.02em;
+  }
+  .header-text p { font-size: 0.85rem; color: var(--blue-400); margin-top: 2px; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 1.1rem 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: rgba(96,165,250,0.3); }
+  .stat-label {
+    font-size: 0.75rem; font-weight: 500; color: var(--blue-400);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 1.6rem; font-weight: 700; color: #fff;
+    font-family: var(--mono); letter-spacing: -0.02em;
+  }
+  .stat-sub { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
+
+  .main-grid {
+    display: grid; grid-template-columns: 380px 1fr; gap: 1.5rem; align-items: start;
+  }
+
+  .form-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px; padding: 1.75rem;
+    position: sticky; top: 1.5rem;
+    backdrop-filter: blur(10px);
+  }
+  .form-card h2 {
+    font-size: 1rem; font-weight: 600; color: #fff;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-card h2 span.dot {
+    width: 8px; height: 8px; background: var(--blue-400); border-radius: 50%; display: inline-block;
+  }
+
+  .field { margin-bottom: 1rem; }
+  label {
+    display: block; font-size: 0.78rem; font-weight: 600; color: var(--blue-200);
+    margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  input, select, textarea {
+    width: 100%; font-family: var(--ff); font-size: 0.9rem;
+    padding: 0.65rem 0.9rem; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06); color: #fff; outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  input::placeholder, textarea::placeholder { color: var(--gray-500); }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--blue-500); background: rgba(59,130,246,0.08);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  }
+  select option { background: var(--gray-800); color: #fff; }
+
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap .prefix {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 0.85rem; color: var(--blue-400); font-weight: 600; pointer-events: none;
+  }
+  .input-icon-wrap input { padding-left: 2rem; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+  .total-preview {
+    background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(29,78,216,0.15));
+    border: 1px solid rgba(96,165,250,0.25);
+    border-radius: 12px; padding: 0.9rem 1rem;
+    margin-top: 1rem; margin-bottom: 1.25rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .total-preview .tl { font-size: 0.8rem; color: var(--blue-300); font-weight: 500; }
+  .total-preview .tv { font-size: 1.2rem; font-weight: 700; color: #34D399; font-family: var(--mono); }
+
+  .btn-add {
+    width: 100%; padding: 0.8rem; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue-500), var(--blue-700));
+    color: #fff; font-family: var(--ff); font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+  }
+  .btn-add:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.4); }
+  .btn-add:active { transform: translateY(0); }
+  .btn-add svg { width: 18px; height: 18px; }
+
+  .table-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 20px; overflow: hidden; backdrop-filter: blur(10px);
+  }
+  .table-top {
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-wrap: wrap; gap: 0.75rem;
+  }
+  .table-top h2 { font-size: 1rem; font-weight: 600; color: #fff; }
+  .table-top .count-badge {
+    background: rgba(59,130,246,0.2); color: var(--blue-300);
+    font-size: 0.75rem; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid rgba(96,165,250,0.2);
+  }
+
+  .table-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .btn-pdf {
+    background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(37,99,235,0.2));
+    border: 1px solid rgba(96,165,250,0.35);
+    color: var(--blue-300); font-size: 0.78rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; cursor: pointer;
+    font-family: var(--ff); transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-pdf:hover {
+    background: linear-gradient(135deg, rgba(59,130,246,0.4), rgba(37,99,235,0.3));
+    border-color: rgba(96,165,250,0.5); color: #fff;
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+  }
+  .btn-pdf:active { transform: translateY(0); }
+  .btn-pdf svg { width: 14px; height: 14px; }
+  .btn-pdf.loading { opacity: 0.6; pointer-events: none; }
+
+  .btn-clear {
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.2);
+    color: #F87171; font-size: 0.78rem; font-weight: 500;
+    padding: 5px 12px; border-radius: 8px; cursor: pointer;
+    font-family: var(--ff); transition: background 0.2s;
+  }
+  .btn-clear:hover { background: rgba(239,68,68,0.2); }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  thead tr { border-bottom: 1px solid rgba(255,255,255,0.07); }
+  th {
+    padding: 0.75rem 1rem; text-align: left;
+    font-size: 0.72rem; font-weight: 600; color: var(--blue-400);
+    text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+  }
+  th:last-child { text-align: center; }
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s; animation: slideIn 0.3s ease;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody tr:last-child { border-bottom: none; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  td { padding: 0.85rem 1rem; color: var(--gray-200); vertical-align: middle; }
+  td.name-cell { color: #fff; font-weight: 500; }
+  td.mono { font-family: var(--mono); font-size: 0.85rem; }
+  td.total-cell { color: #34D399; font-family: var(--mono); font-size: 0.85rem; font-weight: 600; }
+  td.center { text-align: center; }
+
+  .cat-badge {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .cat-elektronik { background: rgba(59,130,246,0.15); color: var(--blue-300); }
+  .cat-makanan    { background: rgba(34,197,94,0.15);  color: #86efac; }
+  .cat-pakaian    { background: rgba(168,85,247,0.15); color: #d8b4fe; }
+  .cat-minuman    { background: rgba(20,184,166,0.15); color: #5eead4; }
+  .cat-lainnya    { background: rgba(148,163,184,0.12);color: var(--gray-400); }
+
+  .btn-del {
+    background: none; border: none; cursor: pointer; color: var(--gray-500);
+    padding: 6px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: color 0.2s, background 0.2s;
+  }
+  .btn-del:hover { color: #F87171; background: rgba(239,68,68,0.1); }
+  .btn-del svg { width: 16px; height: 16px; }
+
+  .empty-state { text-align: center; padding: 4rem 2rem; }
+  .empty-state .icon-wrap {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem;
+  }
+  .empty-state svg { width: 28px; height: 28px; opacity: 0.3; }
+  .empty-state p { color: var(--gray-500); font-size: 0.9rem; }
+
+  .footer-total {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 1.25rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-total .ft-label { font-size: 0.85rem; font-weight: 600; color: var(--gray-400); }
+  .footer-total .ft-items { font-size: 0.8rem; color: var(--gray-500); }
+  .footer-total .ft-total { font-size: 1.35rem; font-weight: 700; color: #34D399; font-family: var(--mono); }
+
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3);
+    color: #86efac; padding: 0.75rem 1.25rem; border-radius: 12px;
+    font-size: 0.875rem; font-weight: 500; z-index: 999;
+    display: flex; align-items: center; gap: 8px;
+    transform: translateY(100px); opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    pointer-events: none; backdrop-filter: blur(12px);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast svg { width: 16px; height: 16px; }
+
+  @media (max-width: 768px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .row-2 { grid-template-columns: 1fr; }
+    .form-card { position: static; }
+  }
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .wrapper { padding: 1rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="header-icon">
+      <svg fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Manajemen Produk</h1>
+      <p>Catat dan kelola stok produk dengan mudah</p>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Produk</div>
+      <div class="stat-value" id="stat-products">0</div>
+      <div class="stat-sub">jenis produk tercatat</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Item</div>
+      <div class="stat-value" id="stat-items">0</div>
+      <div class="stat-sub">unit keseluruhan</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Nilai</div>
+      <div class="stat-value" id="stat-total">Rp 0</div>
+      <div class="stat-sub">estimasi nilai stok</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="form-card">
+      <h2><span class="dot"></span> Tambah Produk</h2>
+
+      <div class="field">
+        <label>Nama Produk</label>
+        <input type="text" id="inp-name" placeholder="Masukkan nama produk..." autocomplete="off">
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Kategori</label>
+          <select id="inp-cat">
+            <option value="Elektronik">Elektronik</option>
+            <option value="Makanan">Makanan</option>
+            <option value="Minuman">Minuman</option>
+            <option value="Pakaian">Pakaian</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Satuan</label>
+          <select id="inp-unit">
+            <option value="pcs">pcs</option>
+            <option value="kg">kg</option>
+            <option value="liter">liter</option>
+            <option value="box">box</option>
+            <option value="lusin">lusin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Harga Satuan</label>
+          <div class="input-icon-wrap">
+            <span class="prefix">Rp</span>
+            <input type="number" id="inp-price" placeholder="0" min="0" step="100">
+          </div>
+        </div>
+        <div class="field">
+          <label>Jumlah</label>
+          <input type="number" id="inp-qty" placeholder="0" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="total-preview">
+        <span class="tl">Total Harga Produk Ini</span>
+        <span class="tv" id="preview-total">Rp 0</span>
+      </div>
+
+      <button class="btn-add" onclick="addProduct()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="16"/>
+          <line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        Tambah Produk
+      </button>
+    </div>
+
+    <div class="table-card">
+      <div class="table-top">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2>Daftar Produk</h2>
+          <span class="count-badge" id="count-badge">0 item</span>
+        </div>
+        <div class="table-actions">
+          <button class="btn-pdf" id="btn-pdf" onclick="exportPDF()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            Ekspor PDF
+          </button>
+          <button class="btn-clear" onclick="clearAll()">Hapus Semua</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="product-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama Produk</th>
+              <th>Kategori</th>
+              <th>Harga Satuan</th>
+              <th>Jumlah</th>
+              <th>Satuan</th>
+              <th>Total Harga</th>
+              <th>Hapus</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr id="empty-row">
+              <td colspan="8">
+                <div class="empty-state">
+                  <div class="icon-wrap">
+                    <svg fill="none" stroke="#94A3B8" stroke-width="1.5" viewBox="0 0 24 24">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                  </div>
+                  <p>Belum ada produk ditambahkan.<br>Isi form di samping untuk mulai mencatat.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-total" id="footer-total" style="display:none">
+        <div>
+          <div class="ft-label">Grand Total</div>
+          <div class="ft-items" id="ft-summary"></div>
+        </div>
+        <div class="ft-total" id="ft-total">Rp 0</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toast-msg">Produk ditambahkan!</span>
+</div>
+
+<script>
+  let products = [];
+  let idCounter = 1;
+
+  const fmtRp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+  const inp = {
+    name:  document.getElementById('inp-name'),
+    cat:   document.getElementById('inp-cat'),
+    unit:  document.getElementById('inp-unit'),
+    price: document.getElementById('inp-price'),
+    qty:   document.getElementById('inp-qty'),
+  };
+
+  function updatePreview() {
+    const p = parseFloat(inp.price.value) || 0;
+    const q = parseFloat(inp.qty.value) || 0;
+    document.getElementById('preview-total').textContent = fmtRp(p * q);
+  }
+
+  inp.price.addEventListener('input', updatePreview);
+  inp.qty.addEventListener('input', updatePreview);
+
+  function addProduct() {
+    const name  = inp.name.value.trim();
+    const price = parseFloat(inp.price.value);
+    const qty   = parseFloat(inp.qty.value);
+
+    if (!name)           { shake(inp.name);  showToast('Nama produk wajib diisi!', false); return; }
+    if (!price || price <= 0) { shake(inp.price); showToast('Harga harus lebih dari 0!', false); return; }
+    if (!qty   || qty   <= 0) { shake(inp.qty);   showToast('Jumlah harus lebih dari 0!', false); return; }
+
+    const product = { id: idCounter++, name, cat: inp.cat.value, unit: inp.unit.value, price, qty, total: price * qty };
+    products.push(product);
+
+    inp.name.value = ''; inp.price.value = ''; inp.qty.value = '';
+    document.getElementById('preview-total').textContent = 'Rp 0';
+    inp.name.focus();
+
+    renderTable(); updateStats();
+    showToast('Produk "' + product.name + '" berhasil ditambahkan!', true);
+  }
+
+  function deleteProduct(id) {
+    products = products.filter(p => p.id !== id);
+    renderTable(); updateStats();
+  }
+
+  function clearAll() {
+    if (products.length === 0) return;
+    if (!confirm('Yakin ingin menghapus semua produk?')) return;
+    products = []; renderTable(); updateStats();
+    showToast('Semua produk dihapus.', false);
+  }
+
+  function catClass(cat) {
+    const map = { 'Elektronik':'elektronik','Makanan':'makanan','Pakaian':'pakaian','Minuman':'minuman','Lainnya':'lainnya' };
+    return 'cat-' + (map[cat] || 'lainnya');
+  }
+
+  function renderTable() {
+    const tbody  = document.getElementById('table-body');
+    const footer = document.getElementById('footer-total');
+    const badge  = document.getElementById('count-badge');
+
+    if (products.length === 0) {
+      tbody.innerHTML = `<tr id="empty-row"><td colspan="8"><div class="empty-state"><div class="icon-wrap"><svg fill="none" stroke="#94A3B8" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><p>Belum ada produk ditambahkan.<br>Isi form di samping untuk mulai mencatat.</p></div></td></tr>`;
+      footer.style.display = 'none';
+      badge.textContent = '0 item';
+      return;
+    }
+
+    badge.textContent = products.length + ' item';
+    const grandTotal = products.reduce((s, p) => s + p.total, 0);
+    const totalQty   = products.reduce((s, p) => s + p.qty, 0);
+
+    tbody.innerHTML = products.map((p, i) => `
+      <tr>
+        <td style="color:var(--gray-500);font-size:0.8rem">${i + 1}</td>
+        <td class="name-cell">${escHtml(p.name)}</td>
+        <td><span class="cat-badge ${catClass(p.cat)}">${p.cat}</span></td>
+        <td class="mono">${fmtRp(p.price)}</td>
+        <td class="mono" style="color:#fff;font-weight:600">${p.qty.toLocaleString('id-ID')}</td>
+        <td style="color:var(--gray-400);font-size:0.82rem">${p.unit}</td>
+        <td class="total-cell">${fmtRp(p.total)}</td>
+        <td class="center">
+          <button class="btn-del" onclick="deleteProduct(${p.id})" title="Hapus">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </td>
+      </tr>`).join('');
+
+    document.getElementById('ft-total').textContent   = fmtRp(grandTotal);
+    document.getElementById('ft-summary').textContent = products.length + ' produk · ' + totalQty.toLocaleString('id-ID') + ' unit total';
+    footer.style.display = 'flex';
+  }
+
+  function updateStats() {
+    const total    = products.reduce((s, p) => s + p.total, 0);
+    const totalQty = products.reduce((s, p) => s + p.qty, 0);
+    document.getElementById('stat-products').textContent = products.length;
+    document.getElementById('stat-items').textContent    = totalQty.toLocaleString('id-ID');
+    document.getElementById('stat-total').textContent    = total >= 1000000
+      ? 'Rp ' + (total / 1000000).toFixed(1) + ' jt' : fmtRp(total);
+  }
+
+  /* ─── PDF EXPORT ─── */
+  function exportPDF() {
+    if (products.length === 0) {
+      showToast('Tidak ada data untuk diekspor!', false); return;
+    }
+
+    const btn = document.getElementById('btn-pdf');
+    btn.classList.add('loading');
+    btn.textContent = 'Membuat PDF...';
+
+    setTimeout(() => {
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        const pageW = doc.internal.pageSize.getWidth();
+        const now   = new Date();
+        const tgl   = now.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+        const jam   = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+
+        /* ── Header background ── */
+        doc.setFillColor(23, 37, 84);           // blue-950
+        doc.rect(0, 0, pageW, 38, 'F');
+
+        doc.setFillColor(37, 99, 235);           // blue-600 accent bar
+        doc.rect(0, 0, 5, 38, 'F');
+
+        /* ── Title ── */
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text('Laporan Data Produk', 14, 15);
+
+        doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(147, 197, 253);         // blue-300
+        doc.text('Dicetak pada: ' + tgl + '  •  ' + jam, 14, 23);
+
+        /* ── Summary boxes ── */
+        const grandTotal = products.reduce((s, p) => s + p.total, 0);
+        const totalQty   = products.reduce((s, p) => s + p.qty, 0);
+
+        const boxes = [
+          { label: 'Total Produk', value: products.length + ' jenis' },
+          { label: 'Total Unit',   value: totalQty.toLocaleString('id-ID') + ' unit' },
+          { label: 'Total Nilai',  value: fmtRp(grandTotal) },
+        ];
+
+        boxes.forEach((b, i) => {
+          const x = pageW - 14 - (boxes.length - 1 - i) * 65 - 60;
+          doc.setFillColor(30, 58, 138);   // blue-800
+          doc.roundedRect(x, 6, 58, 26, 3, 3, 'F');
+          doc.setTextColor(147, 197, 253);
+          doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+          doc.text(b.label.toUpperCase(), x + 5, 14);
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text(b.value, x + 5, 24);
+        });
+
+        /* ── Table ── */
+        const head = [['No', 'Nama Produk', 'Kategori', 'Harga Satuan', 'Jumlah', 'Satuan', 'Total Harga']];
+        const body = products.map((p, i) => [
+          i + 1,
+          p.name,
+          p.cat,
+          fmtRp(p.price),
+          p.qty.toLocaleString('id-ID'),
+          p.unit,
+          fmtRp(p.total)
+        ]);
+
+        doc.autoTable({
+          head, body,
+          startY: 44,
+          margin: { left: 14, right: 14 },
+          styles: {
+            font: 'helvetica', fontSize: 9,
+            cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240], lineWidth: 0.2,
+          },
+          headStyles: {
+            fillColor: [30, 64, 175],    // blue-800
+            textColor: [255, 255, 255],
+            fontStyle: 'bold', fontSize: 8,
+            halign: 'left',
+          },
+          alternateRowStyles: { fillColor: [239, 246, 255] },  // blue-50
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { cellWidth: 60, fontStyle: 'bold' },
+            2: { cellWidth: 28 },
+            3: { halign: 'right', cellWidth: 40 },
+            4: { halign: 'center', cellWidth: 18 },
+            5: { halign: 'center', cellWidth: 18 },
+            6: { halign: 'right', cellWidth: 45, textColor: [29, 78, 216], fontStyle: 'bold' },
+          },
+          didParseCell(data) {
+            if (data.section === 'body' && data.column.index === 6) {
+              data.cell.styles.textColor = [29, 78, 216];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          },
+          foot: [[
+            '', '', '', '', '', 'GRAND TOTAL',
+            fmtRp(grandTotal)
+          ]],
+          footStyles: {
+            fillColor: [23, 37, 84],
+            textColor: [147, 197, 253],
+            fontStyle: 'bold', fontSize: 9,
+          },
+          showFoot: 'lastPage',
+        });
+
+        /* ── Footer line ── */
+        const finalY = doc.lastAutoTable.finalY + 8;
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.3);
+        doc.line(14, finalY, pageW - 14, finalY);
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        doc.text('Dokumen ini digenerate otomatis oleh Sistem Manajemen Produk', 14, finalY + 5);
+        doc.text('Hal. 1', pageW - 14, finalY + 5, { align: 'right' });
+
+        /* ── Save ── */
+        const filename = 'laporan-produk-' + now.toISOString().slice(0, 10) + '.pdf';
+        doc.save(filename);
+        showToast('PDF berhasil diunduh!', true);
+      } catch(e) {
+        console.error(e);
+        showToast('Gagal membuat PDF. Coba lagi.', false);
+      }
+
+      btn.classList.remove('loading');
+      btn.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Ekspor PDF`;
+    }, 80);
+  }
+
+  /* ─── Utilities ─── */
+  let toastTimer;
+  function showToast(msg, success = true) {
+    const el    = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-msg');
+    msgEl.textContent = msg;
+    el.style.background   = success ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.12)';
+    el.style.borderColor  = success ? 'rgba(34,197,94,0.3)'  : 'rgba(239,68,68,0.25)';
+    el.style.color        = success ? '#86efac' : '#F87171';
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  function shake(el) {
+    el.style.animation = 'none'; el.offsetHeight;
+    el.style.animation = 'shake 0.4s ease';
+  }
+
+  const shakeStyle = document.createElement('style');
+  shakeStyle.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}`;
+  document.head.appendChild(shakeStyle);
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && document.activeElement !== document.querySelector('.btn-add')) addProduct();
+  });
+</script>
+</body>
+</html>
